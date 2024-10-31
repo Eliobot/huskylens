@@ -1,9 +1,19 @@
-import time
+from elio import Motors, Buzzer, ObstacleSensor, LineSensor, WiFiConnectivity, IRRemote
 import board
-import elio
+import time
+import pwmio
+import analogio
 from math import sqrt
-
 from circuitPyHuskyLib import HuskyLensLibrary
+
+vBatt_pin = analogio.AnalogIn(board.BATTERY)
+
+AIN1 = pwmio.PWMOut(board.IO36)
+AIN2 = pwmio.PWMOut(board.IO38)
+BIN1 = pwmio.PWMOut(board.IO35)
+BIN2 = pwmio.PWMOut(board.IO37)
+
+motors = Motors(AIN1, AIN2, BIN1, BIN2,vBatt_pin)
 
 DIST_THRESHOLD = 30
 SPEED = 0.02
@@ -34,11 +44,11 @@ def findHorizontalPos(p1, p2=(160,120)):
 
 def getVelocity(direction, speed=SPEED):
     VELOCITY = {
-        'FRONT': lambda: elio.moveForward(int(speed * 100)+10),
-        'BACK': lambda: elio.moveBackward(int(speed * 100)+10),
-        'LEFT': lambda: elio.turnLeft(int(speed * 100)),
-        'RIGHT': lambda: elio.turnRight(int(speed * 100)),
-        'STOP': elio.motorStop
+        'FRONT': lambda: motors.move_forward(int(speed * 100)+10),
+        'BACK': lambda: motors.move_backward(int(speed * 100)+10),
+        'LEFT': lambda: motors.turn_left(int(speed * 100)),
+        'RIGHT': lambda: motors.turn_right(int(speed * 100)),
+        'STOP': motors.motor_stop
     }
 
     return VELOCITY.get(direction, VELOCITY['STOP'])
@@ -48,7 +58,8 @@ def get_area(result):
 
 while True:
 
-    results = hl.learnedBlocks() # Only get learned results
+    results = hl.learnedBlocks() #
+    # Only get learned results
 
     if MOVE and results:
         r = results[0]
@@ -68,7 +79,7 @@ while True:
 
         action() # Execute the motor action
     else:
-        elio.motorStop()
+        motors.motor_stop()
 
     time.sleep(0.1)
 
